@@ -17,7 +17,7 @@ cat <<EOF
 ======================================
 
 Account name: $ACCOUNT_NAME
-Pool: $POLL
+Pool: $POOL
 
 Number of gpus: $gpu_num
 Number of cores: $cpu_cores
@@ -35,13 +35,17 @@ elif [ $gpu_num -eq 1 ]; then
 
     echo "nohup $APP_PATH -g 0 -a $ACCOUNT_NAME -p \"$POOL\" >> $LOG_PATH 2>&1 &"
 else
-    median=$(( cpu_cores / 2))
-    span=$(( median / gpu_num ))
+    physical_cores=$(( cpu_cores / 2 ))
+    append=$(( physical_cores % gpu_num ))
+    span=$(( physical_cores / gpu_num ))
 
     for gpu_seq in $(seq 0 $((gpu_num-1))); do
-        cpu_list="$((gpu_seq * span))-$(((gpu_seq+1) * span - 1)),$((gpu_seq * span + median))-$(((gpu_seq+1) * span + median - 1))"
+        cpu_list="$((gpu_seq * span))-$(((gpu_seq+1) * span - 1)),$((gpu_seq * span + physical_cores))-$(((gpu_seq+1) * span + physical_cores - 1))"
+        if [[ $append -gt 0 ]]; then
+            cpu_list+=",$(( physical_cores - append )),$(( cpu_cores - append ))"
+            append=$(( append - 1 ))
+        fi
         nohup taskset -c $cpu_list $APP_PATH -g $gpu_seq -a $ACCOUNT_NAME -p "$POOL" >> $LOG_PATH 2>&1 &
-
         echo "nohup taskset -c $cpu_list $APP_PATH -g $gpu_seq -a $ACCOUNT_NAME -p \"$POOL\" >> $LOG_PATH 2>&1 &"
     done
 fi
