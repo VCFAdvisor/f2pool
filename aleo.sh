@@ -1,8 +1,8 @@
 #!/bin/bash
 set -o pipefail
 
-ACCOUNT_NAME=accountname
-POOL="xxx.xxx.xxx.xxx:xxxx"
+ACCOUNT_NAME=revenge1988
+POOL="aleo-asia.f2pool.com:4400"
 
 WORKSPACE=$PWD
 LOG_PATH="$WORKSPACE/prover.log"
